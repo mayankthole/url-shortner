@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple URL Shortener</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input, button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0069d9;
+        }
+        #result {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        .url-display {
+            word-break: break-all;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>URL Shortener</h1>
+        
+        <form id="shorten-form">
+            <input type="url" id="original-url" placeholder="Enter a long URL" required>
+            <button type="submit">Create Short URL</button>
+        </form>
+        
+        <div id="result">
+            <h3>Your shortened URL:</h3>
+            <div class="url-display" id="short-url-display"></div>
+            <button id="copy-button">Copy to clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('shorten-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const originalUrl = document.getElementById('original-url').value.trim();
+            if (!originalUrl) return;
+            
+            // Generate a unique short code (in production this would be handled server-side)
+            const shortCode = generateRandomCode(6);
+            
+            // Create the short URL
+            const shortUrl = window.location.origin + window.location.pathname + '#' + shortCode;
+            
+            // Display the short URL
+            document.getElementById('short-url-display').textContent = shortUrl;
+            document.getElementById('result').style.display = 'block';
+            
+            // In a real app, this would save to a database
+            console.log(`Mapping created: ${shortCode} -> ${originalUrl}`);
+            
+            // For demo purposes, store in localStorage
+            const urlMappings = JSON.parse(localStorage.getItem('urlMappings') || '{}');
+            urlMappings[shortCode] = originalUrl;
+            localStorage.setItem('urlMappings', JSON.stringify(urlMappings));
+        });
+        
+        document.getElementById('copy-button').addEventListener('click', function() {
+            const shortUrl = document.getElementById('short-url-display').textContent;
+            navigator.clipboard.writeText(shortUrl)
+                .then(() => {
+                    alert('Copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                });
+        });
+        
+        // Check if we need to redirect
+        if (window.location.hash) {
+            const shortCode = window.location.hash.substring(1);
+            const urlMappings = JSON.parse(localStorage.getItem('urlMappings') || '{}');
+            
+            if (urlMappings[shortCode]) {
+                window.location.href = urlMappings[shortCode];
+            }
+        }
+        
+        function generateRandomCode(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+    </script>
+</body>
+</html>
